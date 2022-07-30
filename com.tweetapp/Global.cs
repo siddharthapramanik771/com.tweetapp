@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
-
+//this class is used as a global data store 
+// created by s.pramanik
 namespace com.tweetapp
 {
     public class Global

@@ -13,7 +13,6 @@ namespace com.tweetapp.Kafka
 
         private readonly ProducerConfig config;
         private readonly ILogger<Producer> logger;
-        private readonly string topic = "db_request";
         public Producer(IConfiguration config, ILogger<Producer> logger)
         {
             this.config = new ProducerConfig
@@ -27,14 +26,14 @@ namespace com.tweetapp.Kafka
             this.logger = logger;
         }
 
-        public async Task<bool> SendRequestToKafkaAsync(string key,string message)
+        public async Task<bool> SendRequestToKafkaAsync(string topic,string message)
         {
             
             using (var producer = new ProducerBuilder<string, string>(config).Build())
             {
                 try
                 {
-                    var result = await producer.ProduceAsync(key, new Message<string, string> {Key=key, Value = message });
+                    var result = await producer.ProduceAsync(topic, new Message<string, string> {Key=topic, Value = message });
                     return true;
                 }
                 catch (ProduceException<string, string> e)

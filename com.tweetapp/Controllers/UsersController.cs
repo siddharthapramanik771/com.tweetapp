@@ -3,6 +3,7 @@ using com.tweetapp.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -46,9 +47,13 @@ namespace com.tweetapp.Controllers
         }
         [HttpPost]
         [Route("register")]
-        public async  Task<JsonResult> register(string first_name,string last_name,string username,
+        public async  Task<dynamic> register(string first_name,string last_name,string username,
             string email,string password,string contact_number)
         {
+            if (email == null | first_name ==null | last_name ==null | username == null | password == null | contact_number == null)
+            {
+                return "Please fill all the fields";
+            }
             var user = new User();
             user.FirstName = first_name;
             user.LastName = last_name;
@@ -58,40 +63,58 @@ namespace com.tweetapp.Controllers
             user.ContactNumber = contact_number;
             if (!Email_validator(email))
             {
-                return new JsonResult("Email already used by some user");
+                return "Email already used by some user";
             }
             if (!username_validator(username))
             {
-                return new JsonResult("This username is not available");
+                return "This username is not available";
             }
             string data = JsonSerializer.Serialize(user);
-            return new JsonResult( await procuder.SendRequestToKafkaAsync(Global.request_types[0], data));
+            return await procuder.SendRequestToKafkaAsync(Global.request_types[0], data);
             
         }
         [HttpGet]
         [Route("login")]
-        public JsonResult login(string username,string password)
+        public string login(string username,string password)
         {
             var filter=Builders<User>.Filter.Eq("username", username);
             var users = _collection.Find(filter).ToList();
             if (users.Count == 0)
             {
-                return new JsonResult("user not found");
+                return "user not found";
             }
             var user = users[0];
             var _password = new PasswordEvidence(password).GetHashCode().ToString();
             if (user.Password != _password)
             {
-                return new JsonResult("Wrong password");
+                return "Wrong password";
             }
-            return new JsonResult("user loggeed in");
+            return "user loggeed in";
+        }
+        [HttpPost]
+        [Route("{username}/forgot")]
+        public async  Task<dynamic> reset_password(string username, string password, string new_password)
+        {
+            var login_response = login(username, password);
+            if (login_response== "user loggeed in" )
+            {
+                var user = new User();
+                user.username=username;
+                user.Password = new PasswordEvidence(new_password).GetHashCode().ToString();
+                string data = JsonSerializer.Serialize(user);
+                return await procuder.SendRequestToKafkaAsync(Global.request_types[6], data);
+            }
+            else
+            {
+                return login_response;
+            }
         }
 
         [HttpGet]
         [Route("users/all")]
         public JsonResult users()
         {
-            var user_list = _collection.AsQueryable();
+            var user_list = _collection.Find(new BsonDocument()).Project(u =>new  { u.username }).ToList();
             return new JsonResult(user_list);
         }
 
@@ -102,10 +125,10 @@ namespace com.tweetapp.Controllers
             var search = username;
             var builder = Builders<User>.Filter;
             var filter = builder.Regex("username", "^.*" + search + ".*$");
-            var user_list=_collection.Find(filter).ToList();
+            var fields = Builders<User>.Projection.Include(p => p.username).ToString();
+            var user_list=_collection.Find(filter).Project(u => new { u.username }).ToList();
             return new JsonResult(user_list);
         }
-
         
     }
 }

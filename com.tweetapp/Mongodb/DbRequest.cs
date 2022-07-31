@@ -68,6 +68,14 @@ namespace com.tweetapp.Mongodb
                     await _database.GetCollection<Reply>("replys").InsertOneAsync(reply);
                     return true;
                 }
+                else if (request_type == Global.request_types[6])
+                {
+                    User user = JsonSerializer.Deserialize<User>(data);
+                    var filter = Builders<User>.Filter.Eq("username", user.username);
+                    var update = Builders<User>.Update.Set("Password", user.Password);
+                    await _database.GetCollection<User>("users").UpdateOneAsync(filter, update);
+                    return true;
+                }
                 return false;
             }
             catch (Exception ex)

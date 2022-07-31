@@ -117,7 +117,7 @@ namespace com.tweetapp.Controllers
             var user_list = _collection.Find(new BsonDocument()).Project(u =>new  { u.username }).ToList();
             return new JsonResult(user_list);
         }
-
+        // searchs the usernames based on the given string
         [HttpGet]
         [Route("/api/v/1.0/tweets/user/search/{username}")]
         public JsonResult search_users(string username)

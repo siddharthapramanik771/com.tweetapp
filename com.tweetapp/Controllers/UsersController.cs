@@ -91,7 +91,7 @@ namespace com.tweetapp.Controllers
             }
             return "user loggeed in";
         }
-        [HttpPost]
+        [HttpPut]
         [Route("{username}/forgot")]
         public async  Task<dynamic> reset_password(string username, string password, string new_password)
         {

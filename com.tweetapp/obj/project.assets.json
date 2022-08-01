@@ -1126,19 +1126,19 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\cogdotnet1103\\.nuget\\packages\\": {}
+    "C:\\Users\\User\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\cogdotnet1103\\Downloads\\com.tweetapp\\com.tweetapp\\com.tweetapp.csproj",
+      "projectUniqueName": "J:\\com.tweetapp\\com.tweetapp\\com.tweetapp.csproj",
       "projectName": "com.tweetapp",
-      "projectPath": "C:\\Users\\cogdotnet1103\\Downloads\\com.tweetapp\\com.tweetapp\\com.tweetapp.csproj",
-      "packagesPath": "C:\\Users\\cogdotnet1103\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\cogdotnet1103\\Downloads\\com.tweetapp\\com.tweetapp\\obj\\",
+      "projectPath": "J:\\com.tweetapp\\com.tweetapp\\com.tweetapp.csproj",
+      "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
+      "outputPath": "J:\\com.tweetapp\\com.tweetapp\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\cogdotnet1103\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\User\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [

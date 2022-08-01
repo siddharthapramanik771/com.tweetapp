@@ -5,8 +5,6 @@ VisualStudioVersion = 17.2.32630.192
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "com.tweetapp", "com.tweetapp\com.tweetapp.csproj", "{A068A1B8-36FA-41CF-87C9-E26C147F561B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "com.tweetapp.test", "com.tweetapp.test\com.tweetapp.test.csproj", "{CBD07BBB-EEAF-404D-9E4B-3FFBE941291A}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

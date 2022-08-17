@@ -39,7 +39,7 @@ namespace com.tweetapp.Kafka
             using (var builder = new ConsumerBuilder<string, string>(config).Build())
             {
                 
-                builder.Subscribe(Global.request_types)
+                builder.Subscribe(Global.request_types);
                 try
                 {
                     await Task.Run(async () =>

@@ -39,26 +39,34 @@ namespace com.tweetapp.Controllers
 
         [HttpPost]
         [Route("{username}/reply/{id}")]
-        public async Task<dynamic> reply_tweet(string username,string id,string msg)
+        public async Task<JsonResult> reply_tweet(string username,string id,Msg msg)
         {
             var filter = Builders<User>.Filter.Eq("username", username);
             var users = _database.GetCollection<User>("users").Find(filter).ToList();
             if (users.Count == 0)
             {
-                return "user not found";
+                return new JsonResult(new JsonStructure("user not found",false));
             }
             var filter1 = Builders<Tweet>.Filter.Eq("_id", new ObjectId(id));
             var tweets = _database.GetCollection<Tweet>("tweets").Find(filter1).ToList();
             if (tweets.Count == 0)
             {
-                return "tweet not found";
+                return new JsonResult(new JsonStructure("tweet not found",false));
             }
             var reply = new Reply();
             reply.username = username;
             reply.tweet_id = id;
-            reply.Msg = msg;
+            reply.Msg = msg.msg;
             string data = JsonSerializer.Serialize(reply);
-            return await procuder.SendRequestToKafkaAsync(Global.request_types[5], data);
+            var result= await procuder.SendRequestToKafkaAsync(Global.request_types[5], data);
+            if (result)
+            {
+                return new JsonResult(new JsonStructure("reply message is posted", true));
+            }
+            else
+            {
+                return new JsonResult(new JsonStructure("unexpected error", false));
+            }
         }
 
     }

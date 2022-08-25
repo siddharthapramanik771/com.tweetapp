@@ -1,5 +1,6 @@
 ﻿using com.tweetapp.Kafka;
 using com.tweetapp.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -33,8 +34,8 @@ namespace com.tweetapp.Controllers
         [HttpGet]
         [Route("all")]
         public JsonResult tweets()
-        {
-            var tweet_list = _collection.AsQueryable();
+        { 
+            var tweet_list = _collection.Find(new BsonDocument()).SortByDescending(x=>x._id).ToList();
             return new JsonResult(tweet_list);
         }
         [HttpGet]
@@ -42,107 +43,142 @@ namespace com.tweetapp.Controllers
         public JsonResult fetch_all_tweets_of_user(string username)
         {
             var filter = Builders<Tweet>.Filter.Eq("username", username);
-            var tweets = _collection.Find(filter).ToList();
+            var tweets = _collection.Find(filter).SortByDescending(x => x._id).ToList();
             return new JsonResult(tweets);
         }
 
         [HttpPost]
         [Route("{username}/add")]
-        public async Task<dynamic> post_tweet(string username,string msg)
+        public async Task<JsonResult> post_tweet(string username,Msg msg)
         {
             var filter = Builders<User>.Filter.Eq("username", username);
             var users = _database.GetCollection<User>("users").Find(filter).ToList();
             if (users.Count == 0)
             {
-                return "user not found";
+                return new JsonResult(new JsonStructure("user not found",false));
             }
             var tweet = new Tweet();
             tweet.username= username;
-            tweet.Msg = msg;
+            tweet.Msg = msg.msg;
             tweet.users_liked = new List<string>();
             string data = JsonSerializer.Serialize(tweet);
-            return await procuder.SendRequestToKafkaAsync(Global.request_types[1], data);
+            var result = await procuder.SendRequestToKafkaAsync(Global.request_types[1], data);
+            var final_msg = "";
+            if (result)
+            {
+                final_msg = "tweet is posted ";
+            }
+            else
+            {
+                final_msg = "unexpected error";
+            }
+
+            return new JsonResult(new JsonStructure(final_msg,result));
 
 
         }
 
         [HttpPut]
         [Route("{username}/update/{id}")]
-        public async Task<dynamic> update_tweet(string username,string id,string msg)
+        public async Task<JsonResult> update_tweet(string username,string id,Msg msg)
         {
             var _id =new  ObjectId(id);
             var filter1= Builders<Tweet>.Filter.Eq("_id", _id);
             var tweets = _collection.Find(filter1).ToList();
             if (tweets.Count == 0)
             {
-                return "tweet not found";
+                return new JsonResult(new JsonStructure("tweet not found",false));
             }
             Tweet tweet = tweets[0];
             if (tweet.username != username)
             {
-                return "unauthorized access";
+                return new JsonResult(new JsonStructure("unauthorized access", false));
             }
             DataForTweet data = new DataForTweet();
             data.id = tweet.GetId;
-            data.msg= msg;
+            data.msg= msg.msg;
             string final_data = JsonSerializer.Serialize(data);
-            return await procuder.SendRequestToKafkaAsync(Global.request_types[2], final_data);
+            var result = await procuder.SendRequestToKafkaAsync(Global.request_types[2], final_data);
+            if(result == true)
+            {
+                return new JsonResult(new JsonStructure("tweet is updating",true ));
+            }
+            else
+            {
+                return new JsonResult(new JsonStructure("network error , try again",false));
+            }
             
         }
 
         [HttpDelete]
         [Route("{username}/delete/{id}")]
-        public async Task<dynamic> delete_tweet(string username, string id)
+        public async Task<JsonResult> delete_tweet(string username, string id)
         {
             var _id = new ObjectId(id);
             var filter1 = Builders<Tweet>.Filter.Eq("_id", _id);
             var tweets = _collection.Find(filter1).ToList();
             if (tweets.Count == 0)
             {
-                return "tweet not found";
+                return new JsonResult(new JsonStructure("tweet not found",false));
             }
             var tweet = tweets[0];
             if (tweet.username != username)
             {
-                return "unauthorized access";
+                return new JsonResult(new JsonStructure("unauthorized access", false));
             }
             DataForTweet data=new DataForTweet();
             data.id= tweet.GetId;
             string finaldata = JsonSerializer.Serialize(data);
-            return await procuder.SendRequestToKafkaAsync(Global.request_types[3], finaldata);
+            var result = await procuder.SendRequestToKafkaAsync(Global.request_types[3], finaldata);
+            if (result == true)
+            {
+                return new JsonResult(new JsonStructure("tweet is deleted", true));
+            }
+            else
+            {
+                return new JsonResult(new JsonStructure("network error, try again", false));
+            }
         }
 
         [HttpPut]
         [Route("{username}/like/{id}")]
-        public async Task<dynamic> like_tweet(string username, string id)
+        public async Task<JsonResult> like_tweet(string username, string id)
         {
             var filter = Builders<User>.Filter.Eq("username", username);
             var users = _database.GetCollection<User>("users").Find(filter).ToList();
             if (users.Count == 0)
             {
-                return "user not found";
+                return  new JsonResult(new JsonStructure("user not found", false));
             }
             var _id = new ObjectId(id);
             var filter1 = Builders<Tweet>.Filter.Eq("_id", _id);
             var tweets = _collection.Find(filter1).ToList();
             if (tweets.Count == 0)
             {
-                return "tweet not found";
+                return new JsonResult(new JsonStructure("tweet not found", false));
             }
             Tweet tweet = tweets[0];
             if (tweet.username == username)
             {
-                return "You Can not like your own tweet";
+                return new JsonResult(new JsonStructure("You Can not like your own tweet", false));
             }
             if (tweet.users_liked.Contains(username))
             {
-                return "You have already liked this tweet";
+                return new JsonResult(new JsonStructure("You have already liked this tweet", false));
             }
             DataForTweet data = new DataForTweet();
             data.id = tweet.GetId;
             data.user_liked = username;
             string finaldata = JsonSerializer.Serialize(data);
-            return await procuder.SendRequestToKafkaAsync(Global.request_types[4], finaldata);
+            var result = await procuder.SendRequestToKafkaAsync(Global.request_types[4], finaldata);
+            if (result)
+            {
+                return new JsonResult(new JsonStructure("You have liked the tweet",true));
+            }
+            else
+            {
+                return new JsonResult(new JsonStructure("unexpected error", false));
+            }
         }
     }
 }

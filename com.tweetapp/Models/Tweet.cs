@@ -29,4 +29,8 @@ namespace com.tweetapp.Models
             }
         }
     }
+    public class Msg
+    {
+        public string msg { get; set; }
+    }
 }

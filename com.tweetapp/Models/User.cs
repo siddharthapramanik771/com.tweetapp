@@ -16,4 +16,9 @@ namespace com.tweetapp.Models
 
 
     }
+
+    public class Password
+    {
+        public string new_password { get; set; }
+    }
 }

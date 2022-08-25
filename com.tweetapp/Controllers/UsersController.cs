@@ -1,11 +1,17 @@
 ﻿using com.tweetapp.Kafka;
 using com.tweetapp.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -18,6 +24,8 @@ namespace com.tweetapp.Controllers
         private const string V = "api/v1.0/tweets/";
         private readonly IMongoCollection<User> _collection;
         private readonly IProducer procuder;
+        private IConfiguration _config;
+
         public UsersController(IConfiguration configuration,IProducer producer)
         {
             var settings = MongoClientSettings.FromConnectionString(configuration.GetConnectionString("MongoConnection"));
@@ -26,6 +34,7 @@ namespace com.tweetapp.Controllers
             var database = client.GetDatabase("tweetapp");
             _collection = database.GetCollection<User>("users");
             this.procuder = producer;
+            this._config = configuration;
         }
         private bool Email_validator(string email)
         {
@@ -45,68 +54,87 @@ namespace com.tweetapp.Controllers
             }
             return true;
         }
+        private bool validator(string input)
+        {
+            if (input == null)
+            {
+                return false;
+            }
+            if (input == "")
+            {
+                return false;
+            }
+            if (input == " ")
+            {
+                return false;
+            }
+            return true;
+        }
         [HttpPost]
         [Route("register")]
-        public async  Task<dynamic> register(string first_name,string last_name,string username,
-            string email,string password,string contact_number)
+        public async  Task<JsonResult> register(User user)
         {
-            if (email == null | first_name ==null | last_name ==null | username == null | password == null | contact_number == null)
+            if (!validator(user.Email) | !validator(user.FirstName) | !validator(user.LastName) | !validator(user.username) | !validator(user.Password) | !validator(user.ContactNumber))
             {
-                return "Please fill all the fields";
+                return new JsonResult(new JsonStructure("Please fill up all the fields",false));
             }
-            var user = new User();
-            user.FirstName = first_name;
-            user.LastName = last_name;
-            user.username = username;
-            user.Email = email;
-            user.Password = new PasswordEvidence(password).GetHashCode().ToString(); ;
-            user.ContactNumber = contact_number;
-            if (!Email_validator(email))
+            
+            user.Password = new PasswordEvidence(user.Password).GetHashCode().ToString(); ;
+            if (!Email_validator(user.Email))
             {
-                return "Email already used by some user";
+                return new JsonResult(new JsonStructure("Email already used by some user",false));
             }
-            if (!username_validator(username))
+            if (!username_validator(user.username))
             {
-                return "This username is not available";
+                return new JsonResult(new JsonStructure("This username is not available",false));
             }
             string data = JsonSerializer.Serialize(user);
-            return await procuder.SendRequestToKafkaAsync(Global.request_types[0], data);
-            
+            var result = await procuder.SendRequestToKafkaAsync(Global.request_types[0], data);
+            if(result == true)
+            {
+                return new JsonResult(new JsonStructure("User registered successfully", true));
+            }
+            else
+            {
+                return new JsonResult(new JsonStructure("unexpected error try again", false));
+            }
         }
         [HttpGet]
+        [AllowAnonymous]
         [Route("login")]
-        public string login(string username,string password)
+        public JsonResult login(string username,string password)
         {
             var filter=Builders<User>.Filter.Eq("username", username);
             var users = _collection.Find(filter).ToList();
             if (users.Count == 0)
             {
-                return "user not found";
+                return new JsonResult(new JsonStructure("user not found",false));
             }
             var user = users[0];
             var _password = new PasswordEvidence(password).GetHashCode().ToString();
             if (user.Password != _password)
             {
-                return "Wrong password";
+                return new JsonResult(new JsonStructure("Wrong password", false));
             }
-            return "user loggeed in";
+            return new JsonResult(new JsonStructure("user logged in", true));
         }
         [HttpPut]
         [Route("{username}/forgot")]
-        public async  Task<dynamic> reset_password(string username, string password, string new_password)
+        [Authorize]
+        public async  Task<JsonResult> reset_password(string username, Password password)
         {
-            var login_response = login(username, password);
-            if (login_response== "user loggeed in" )
+            var user = new User();
+            user.username = username;
+            user.Password = new PasswordEvidence(password.new_password).GetHashCode().ToString();
+            string data = JsonSerializer.Serialize(user);
+            var result = await procuder.SendRequestToKafkaAsync(Global.request_types[6], data);
+            if (result)
             {
-                var user = new User();
-                user.username=username;
-                user.Password = new PasswordEvidence(new_password).GetHashCode().ToString();
-                string data = JsonSerializer.Serialize(user);
-                return await procuder.SendRequestToKafkaAsync(Global.request_types[6], data);
+                return new JsonResult(new JsonStructure("password changed successfully", true));
             }
             else
             {
-                return login_response;
+                return new JsonResult(new JsonStructure("Unexpected error", false));
             }
         }
 
@@ -114,7 +142,7 @@ namespace com.tweetapp.Controllers
         [Route("users/all")]
         public JsonResult users()
         {
-            var user_list = _collection.Find(new BsonDocument()).Project(u =>new  { u.username }).ToList();
+            var user_list = _collection.Find(new BsonDocument()).ToList();
             return new JsonResult(user_list);
         }
         // searchs the usernames based on the given string
@@ -125,8 +153,8 @@ namespace com.tweetapp.Controllers
             var search = username;
             var builder = Builders<User>.Filter;
             var filter = builder.Regex("username", "^.*" + search + ".*$");
-            var fields = Builders<User>.Projection.Include(p => p.username).ToString();
-            var user_list=_collection.Find(filter).Project(u => new { u.username }).ToList();
+            //var fields = Builders<User>.Projection.Include(p => p.username).ToString();
+            var user_list=_collection.Find(filter).ToList();
             return new JsonResult(user_list);
         }
         

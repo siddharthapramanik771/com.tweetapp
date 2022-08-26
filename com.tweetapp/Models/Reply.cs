@@ -6,7 +6,7 @@ namespace com.tweetapp.Models
     {
         public ObjectId _id { get; set; }
         public string username { get; set; }
-        public string Msg { get; set; }
+        public string msg { get; set; }
 
         public string tweet_id { get; set; }
     }

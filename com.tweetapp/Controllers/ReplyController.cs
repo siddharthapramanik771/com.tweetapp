@@ -56,7 +56,7 @@ namespace com.tweetapp.Controllers
             var reply = new Reply();
             reply.username = username;
             reply.tweet_id = id;
-            reply.Msg = msg.msg;
+            reply.msg = msg.msg;
             string data = JsonSerializer.Serialize(reply);
             var result= await procuder.SendRequestToKafkaAsync(Global.request_types[5], data);
             if (result)

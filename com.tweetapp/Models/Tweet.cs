@@ -9,11 +9,11 @@ namespace com.tweetapp.Models
        
         public ObjectId _id { get; set; }
         [MaxLength(144)]
-        public string Msg { get; set; }
+        public string msg { get; set; }
         public string username { get; set; }
         public List<string> users_liked { get; set; }
 
-        public string GetId
+        public string getId
         {
             get
             {

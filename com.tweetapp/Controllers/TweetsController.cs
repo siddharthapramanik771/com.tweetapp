@@ -59,7 +59,7 @@ namespace com.tweetapp.Controllers
             }
             var tweet = new Tweet();
             tweet.username= username;
-            tweet.Msg = msg.msg;
+            tweet.msg = msg.msg;
             tweet.users_liked = new List<string>();
             string data = JsonSerializer.Serialize(tweet);
             var result = await procuder.SendRequestToKafkaAsync(Global.request_types[1], data);
@@ -95,7 +95,7 @@ namespace com.tweetapp.Controllers
                 return new JsonResult(new JsonStructure("unauthorized access", false));
             }
             DataForTweet data = new DataForTweet();
-            data.id = tweet.GetId;
+            data.id = tweet.getId;
             data.msg= msg.msg;
             string final_data = JsonSerializer.Serialize(data);
             var result = await procuder.SendRequestToKafkaAsync(Global.request_types[2], final_data);
@@ -127,7 +127,7 @@ namespace com.tweetapp.Controllers
                 return new JsonResult(new JsonStructure("unauthorized access", false));
             }
             DataForTweet data=new DataForTweet();
-            data.id= tweet.GetId;
+            data.id= tweet.getId;
             string finaldata = JsonSerializer.Serialize(data);
             var result = await procuder.SendRequestToKafkaAsync(Global.request_types[3], finaldata);
             if (result == true)
@@ -167,7 +167,7 @@ namespace com.tweetapp.Controllers
                 return new JsonResult(new JsonStructure("You have already liked this tweet", false));
             }
             DataForTweet data = new DataForTweet();
-            data.id = tweet.GetId;
+            data.id = tweet.getId;
             data.user_liked = username;
             string finaldata = JsonSerializer.Serialize(data);
             var result = await procuder.SendRequestToKafkaAsync(Global.request_types[4], finaldata);

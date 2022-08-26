@@ -43,7 +43,7 @@ namespace com.tweetapp.Mongodb
                 {
                     DataForTweet tweet = JsonSerializer.Deserialize<DataForTweet>(data);
                     var filter = Builders<Tweet>.Filter.Eq("_id",new ObjectId(tweet.id));
-                    var update = Builders<Tweet>.Update.Set("Msg", tweet.msg);
+                    var update = Builders<Tweet>.Update.Set("msg", tweet.msg);
                     await _database.GetCollection<Tweet>("tweets").UpdateOneAsync(filter,update); 
                     return true;
                 }
@@ -72,7 +72,7 @@ namespace com.tweetapp.Mongodb
                 {
                     User user = JsonSerializer.Deserialize<User>(data);
                     var filter = Builders<User>.Filter.Eq("username", user.username);
-                    var update = Builders<User>.Update.Set("Password", user.Password);
+                    var update = Builders<User>.Update.Set("password", user.password);
                     await _database.GetCollection<User>("users").UpdateOneAsync(filter, update);
                     return true;
                 }

@@ -38,7 +38,7 @@ namespace com.tweetapp.Controllers
         }
         private bool Email_validator(string email)
         {
-            var user_count = _collection.Find(x => x.Email == email).CountDocuments();
+            var user_count = _collection.Find(x => x.email == email).CountDocuments();
             if (user_count >= 1)
             {
                 return false;
@@ -74,13 +74,13 @@ namespace com.tweetapp.Controllers
         [Route("register")]
         public async  Task<JsonResult> register(User user)
         {
-            if (!validator(user.Email) | !validator(user.FirstName) | !validator(user.LastName) | !validator(user.username) | !validator(user.Password) | !validator(user.ContactNumber))
+            if (!validator(user.email) | !validator(user.firstName) | !validator(user.lastName) | !validator(user.username) | !validator(user.password) | !validator(user.contactNumber))
             {
                 return new JsonResult(new JsonStructure("Please fill up all the fields",false));
             }
             
-            user.Password = new PasswordEvidence(user.Password).GetHashCode().ToString(); ;
-            if (!Email_validator(user.Email))
+            user.password = new PasswordEvidence(user.password).GetHashCode().ToString(); ;
+            if (!Email_validator(user.email))
             {
                 return new JsonResult(new JsonStructure("Email already used by some user",false));
             }
@@ -112,7 +112,7 @@ namespace com.tweetapp.Controllers
             }
             var user = users[0];
             var _password = new PasswordEvidence(password).GetHashCode().ToString();
-            if (user.Password != _password)
+            if (user.password != _password)
             {
                 return new JsonResult(new JsonStructure("Wrong password", false));
             }
@@ -125,7 +125,7 @@ namespace com.tweetapp.Controllers
         {
             var user = new User();
             user.username = username;
-            user.Password = new PasswordEvidence(password.new_password).GetHashCode().ToString();
+            user.password = new PasswordEvidence(password.new_password).GetHashCode().ToString();
             string data = JsonSerializer.Serialize(user);
             var result = await procuder.SendRequestToKafkaAsync(Global.request_types[6], data);
             if (result)
@@ -142,7 +142,7 @@ namespace com.tweetapp.Controllers
         [Route("users/all")]
         public JsonResult users()
         {
-            var user_list = _collection.Find(new BsonDocument()).ToList();
+            var user_list = _collection.AsQueryable().ToList();
             return new JsonResult(user_list);
         }
         // searchs the usernames based on the given string

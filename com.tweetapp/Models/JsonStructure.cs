@@ -10,5 +10,6 @@
 
         public string msg { get; set; }
         public bool status { get; set; }
+        public object data { get; set; }
     }
 }

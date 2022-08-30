@@ -92,7 +92,9 @@ namespace com.tweetapp.Controllers
             var result = await procuder.SendRequestToKafkaAsync(Global.request_types[0], data);
             if(result == true)
             {
-                return new JsonResult(new JsonStructure("User registered successfully", true));
+                var result_data = new JsonStructure("User registered successfully", true);
+                result_data.data = user;
+                return new JsonResult(result_data);
             }
             else
             {
@@ -100,7 +102,6 @@ namespace com.tweetapp.Controllers
             }
         }
         [HttpGet]
-        [AllowAnonymous]
         [Route("login")]
         public JsonResult login(string username,string password)
         {
@@ -116,11 +117,13 @@ namespace com.tweetapp.Controllers
             {
                 return new JsonResult(new JsonStructure("Wrong password", false));
             }
-            return new JsonResult(new JsonStructure("user logged in", true));
+            var result = new JsonStructure("user logged in", true);
+            result.data = user;
+            return new JsonResult(result);
         }
         [HttpPut]
         [Route("{username}/forgot")]
-        [Authorize]
+ 
         public async  Task<JsonResult> reset_password(string username, Password password)
         {
             var user = new User();

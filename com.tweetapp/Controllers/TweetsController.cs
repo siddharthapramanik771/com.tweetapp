@@ -164,7 +164,7 @@ namespace com.tweetapp.Controllers
             }
             if (tweet.users_liked.Contains(username))
             {
-                return new JsonResult(new JsonStructure("You have already liked this tweet", false));
+                return new JsonResult(new JsonStructure("You have already liked this tweet", true));
             }
             DataForTweet data = new DataForTweet();
             data.id = tweet.getId;

@@ -32,7 +32,7 @@ namespace com.tweetapp.Controllers
         [Route("{id}/replys")]
         public JsonResult fetch_all_replys_of_tweet(string id)
         {
-            var reply_list=_collection.Find(x => x.tweet_id == id).ToList();
+            var reply_list=_collection.Find(x => x.tweet_id == id).SortBy(x => x._id).ToList(); ;
             return new JsonResult(reply_list);
 
         }
